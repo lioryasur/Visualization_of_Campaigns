@@ -1,4 +1,5 @@
 import dash
+import dash_design_kit as dcc
 from dash import Input, Output, State, html, dcc, dash_table, MATCH, ALL, ctx
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -83,7 +84,7 @@ layout = html.Div(
                         )
                     ]
                 ),
-                #ddk.Graph(id = 'compare_graph'),
+                #dcc.Graph(id = 'compare_graph'),
 
                 #dmc.Divider(label = 'Numerical Grouping', labelPosition = 'center'),
                 dmc.Paper(

@@ -1,5 +1,4 @@
 import dash
-import dash_design_kit as ddk
 from dash import Input, Output, State, html, dcc, dash_table, MATCH, ALL, ctx
 import dash_mantine_components as dmc
 from dash_iconify import DashIconify
@@ -11,12 +10,14 @@ import os
 import dash_daq as daq
 import plotly.express as px
 import plotly.graph_objects as go
-
+from make_static import make_static
 from app import app
 
 layout = html.Div(
     style= {'margin-top':'70px'},
     children=[
+        html.Button('save static', id='save', n_clicks=0),
+        html.Span('', id='saved'),
         dmc.Group(
             direction = 'column',
             grow = True,
@@ -131,7 +132,7 @@ layout = html.Div(
                             style={'height':'350px'},
                             children=[
                                 dmc.Title('Gender', order = 4, style = {'font-family':'IntegralCF-Regular','text-align':'center', 'color':'grey', 'letter-spacing':'1px'}),
-                                ddk.Graph(id='gender'),
+                                dcc.Graph(id='gender'),
                             ]
                         ),
                         dmc.Paper(
@@ -142,7 +143,7 @@ layout = html.Div(
                             style={'height':'350px'},
                             children=[
                                 dmc.Title('Household', order = 4, style = {'font-family':'IntegralCF-Regular','text-align':'center', 'color':'grey', 'letter-spacing':'1px'}),
-                                ddk.Graph(id='household')
+                                dcc.Graph(id='household')
                             ]
                         ),
                         dmc.Paper(
@@ -153,7 +154,7 @@ layout = html.Div(
                             style={'height':'350px'},
                             children=[
                                 dmc.Title('Senior Citizen Status', order = 4, style = {'font-family':'IntegralCF-Regular','text-align':'center', 'color':'grey', 'letter-spacing':'1px'}),
-                                ddk.Graph(id = 'age')
+                                dcc.Graph(id = 'age')
                             ]
                         ),
                     ]
@@ -170,7 +171,7 @@ layout = html.Div(
                             style={'height':'500px'},
                             children=[
                                 dmc.Title('Customer Density', order = 4, style = {'font-family':'IntegralCF-Regular','text-align':'center', 'color':'grey', 'letter-spacing':'1px'}),
-                                ddk.Graph(id = 'locations_map')
+                                dcc.Graph(id = 'locations_map')
                             ]
                         ),
                         dmc.Paper(
@@ -181,7 +182,7 @@ layout = html.Div(
                             style={'height':'500px'},
                             children=[
                                 dmc.Title('Customers W/O Phone Service', order = 4, style = {'font-family':'IntegralCF-Regular','text-align':'center', 'color':'grey', 'letter-spacing':'1px'}),
-                                ddk.Graph(id = 'locations_map1')
+                                dcc.Graph(id = 'locations_map1')
                             ]
                         ),
                         dmc.Paper(
@@ -192,7 +193,7 @@ layout = html.Div(
                             style={'height':'500px'},
                             children=[
                                 dmc.Title('Customers W/O Internet Service', order = 4, style = {'font-family':'IntegralCF-Regular','text-align':'center', 'color':'grey', 'letter-spacing':'1px'}),
-                                ddk.Graph(id = 'locations_map2')
+                                dcc.Graph(id = 'locations_map2')
                             ]
                         ),
                     ]
@@ -469,3 +470,14 @@ def update_locations(n):
     )
 
     return fig
+
+@app.callback(
+        Output('saved', 'children'),
+        Input('save', 'n_clicks'),
+    )
+def save_result(n_clicks):
+    if n_clicks == 0:
+        return 'not saved'
+    else:
+        make_static(f'http://127.0.0.1:{8050}/')
+        return 'saved'
