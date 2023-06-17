@@ -279,6 +279,11 @@ app.layout = dmc.MantineProvider(
                                             label="Churn Prediction",
                                             href=app.get_relative_path("/summary"),
                                         ),
+                                        create_main_nav_link(
+                                            icon="ooui:123",
+                                            label="Protests",
+                                            href=app.get_relative_path("/Protests"),
+                                        ),
                                     ],
                                 ),
                                 # dmc.Divider(label='Ticket Sales', style={"marginBottom": 15, "marginTop": 10}),
@@ -399,6 +404,8 @@ def display_content(pathname):
         return pages.churn.layout
     elif page_name == 'summary':
         return pages.summary.layout
+    elif page_name == 'Protests':
+        return pages.Protests.layout
 
 @app.callback([Output(component_id='liveindicator', component_property='className'),
               Output(component_id='indicatorpulse', component_property='className')],
