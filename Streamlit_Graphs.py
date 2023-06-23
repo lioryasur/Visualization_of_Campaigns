@@ -11,80 +11,31 @@ import plotly.graph_objects as go
 import numpy as np
 from app import app
 import streamlit as st
-import numpy as np
 from datetime import time
 from Filters import filter_A, filter_B, filter_CD, filter_E
 import plotly.subplots as sp
-
-os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
 
-df_A, ids = filter_A(df)
+df_A = filter_A(df)
 
-color_dict = {
-    'No Intervention': '#FFA07A',
-    'Material Reprucussions': '#4682B4',
-    'complete success': '#006400',  # Darker green
-    'limited concession achieved': '#A2CD5A',  # Darker yellowgreen
-    'status quo': 'orange',  # Gold
-    'significant concessions achieved': '#6E8B3D',  # Lighter yellowgreen
-    'ends in failure': '#8B0000',  # Dark red
-    'visible gains short of concessions': '#FFD700',  # YellowGreen
-    'greater autonomy': '#808080'  # Gray
-}
+fig_A = px.line(df_A, x='year', y='percent_participation', color='progress_names',
+                line_dash='goal_names', hover_data=['camp_name', 'location'], line_group='id')
 
-
-#translate df_A['progress_names'] to colors
-
-df_A['color'] = df_A['progress_names'].apply(lambda x: color_dict[x])
-
-print(set(list(df_A['color'])))
-
-# df_A["line_width"]  = df_A["line_width"].apply(lambda x: int(x))
-
-# fig_A = px.line(df_A, x='year', y='percent_participation', color='progress_names',
-#                 line_dash='goal_names', hover_data=['camp_name', 'location'], line_group='id')
-
-# goals_to_type = {"greater autonomy": "dash", "regime change": "solid"}
-
-figs_A = []
-fig_A = go.Figure()
-for i, id in enumerate(ids):
-    df_temp = df_A[df_A['id'] == id]
-    unique_years = df_temp['year'].unique()
-
-    for year in unique_years:
-        df_years = df_temp[(df_temp['year'] == year) | (df_temp['year'] == year + 1)]
-
-        width = np.clip(np.log2(float(abs(df_years["percent_participation"].iloc[0]))*1000 + 0.0001), 0.05, 10)
-        if np.isnan(width):
-            width = 0
-
-        fig_A.add_trace(go.Scatter(
-            x=df_years['year'],
-            y=[i]*len(df_years),
-            mode='lines + markers',
-            marker = dict(color = df_years['color'].iloc[0]),
-            line=dict(color=df_years['color'].iloc[0], width=width)  # Assuming 'color' is a column in df_temp
-        ))
-
-
-max_val = df_A['percent_participation'].max()
 fig_A.update_layout(
     autosize=False,  # Disable autosize
     width=1000,  # Set figure width
-    height=810,  # Set figure height
+    height=1000,  # Set figure height
     xaxis_title='Year',
-    yaxis_title='Campign',
+    yaxis_title='Campaign Size',
     title='Campaign Sizes over Time',
     xaxis={'fixedrange': True},  # Disable dragging on x-axis
-    yaxis={ 'fixedrange': True, 'range': [0, len(ids)]},
-    # Use log scale and disable dragging on y-axis,
+    yaxis={'type': 'log', 'fixedrange': True, 'range': [0, np.log10(80)]}  # Use log scale and disable dragging on y-axis,
 )
 
-fig_A.update_traces(showlegend=False)
+fig_A.update_traces(showlegend=False, line=dict(width=3))
 
 
 color_trace = px.line(
@@ -94,67 +45,74 @@ color_trace = px.line(
     color="progress_names",
 ).update_traces(legendgrouptitle_text="progress_names", legendgroup=str("Legends"))
 
-
-
+linetype_trace = px.line(
+    df_A,
+    x="year",
+    y=np.full(len(df_A), -1000),
+    line_dash="goal_names",
+).update_traces(legendgrouptitle_text="Goals", legendgroup=str(" "), line_color='white')
 
 
 fig_A.add_traces(color_trace.data)
 fig_A.add_traces(linetype_trace.data)
 
 
-df_B = filter_B(df)
+df_B = filter_B(df)  # Apply your filter function to the DataFrame, replace filter_B(df) with your actual function
+num_data_points_per_bin = 20
+df_B = df_B.sort_values(by='stat')
+# Create the histogram
+bin_edges = np.array([0, 0.25, 0.5, 0.75, 1, 1.50, 2, 2.5, 3, 4, 100])
 
-# Define the number of bins and bin width
-num_bins = 10
-bin_width = (df_B['stat'].max() - df_B['stat'].min()) / num_bins
+# fig_B = px.histogram(df_B, x='stat', color='success', nbins=10)
+#
+# fig_B.update_layout(
+#     autosize=False,
+#     width=800,
+#     height=500,
+#     title_text="Campaign Size Distribution",
+#     barmode='stack'
+# )
 
-# Create the bins
-bins = np.arange(0, df_B['stat'].max() + bin_width, bin_width)
 
-# Group the data into the bins and calculate the average success percentage
-df_B['stat_bins'] = pd.cut(df_B['stat'], bins)
-grouped = df_B.groupby('stat_bins')['success'].mean()
 
-# Convert Interval object to string representation
-x_values = [str(interval) for interval in grouped.index]
+# Define colors for success values
+success_colors = {1: 'green', 0: 'red'}
 
-# Get the count of data points in each bin
-counts = df_B['stat_bins'].value_counts().reindex(grouped.index, fill_value=0)
+# Create a list to store the bar traces
+bar_traces = []
 
-# Create the hovertemplate
-hovertemplate = (
-    "Bin: %{x}<br>"
-    "Success Percentage: %{y:.2f}%<br>"
-    "Data Points: %{customdata}"
+# Iterate over the success values
+for success in success_colors.keys():
+    # Filter the counts based on success value
+    relevant = df_B[df_B['success'] == success]
+    counts, edges = np.histogram(relevant.stat, bins=bin_edges)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    widths = edges[1:] - edges[:-1]
+    # Create a bar trace with custom widths
+    bar_trace = go.Bar(
+        x=centers,
+        y=counts,
+        width=0.25,
+        name=success,
+        marker_color=success_colors[success]
+    )
+
+    # Append the bar trace to the list
+    bar_traces.append(bar_trace)
+
+# Create the figure with stacked bar traces
+fig_B = go.Figure(data=bar_traces)
+
+fig_B.update_layout(
+    autosize=False,
+    width=800,
+    height=500,
+    title_text="Campaign Size Distribution",
+    xaxis_title="Stat",
+    yaxis_title="Count",
+    barmode='stack',
+    xaxis_type='log'
 )
-
-success_percentage = grouped * 100
-rounded_percentage = round(success_percentage, 2)
-
-# Create the bar trace with the desired color and rounded values
-trace = go.Bar(
-    x=x_values,
-    y=grouped * 100,  # Multiply by 100 to get percentage
-    marker=dict(color='rgb(128, 177, 211)'),
-    text=rounded_percentage,
-    customdata = counts,
-    texttemplate='%{text:.2f}%',  # Format the text as rounded percentage with 2 decimal places
-    hovertemplate=hovertemplate,
-    hovertext=counts,  # Set the hover text to the counts
-)
-
-# Create the layout
-layout = go.Layout(
-    title='Odds of Campaign Success by Portion of Population Involved',
-    xaxis=dict(title='Percent of Population Present In Campaign'),
-    yaxis=dict(title='Success Percentage')
-)
-
-# Create the figure
-fig_B = go.Figure(data=[trace], layout=layout)
-
-
-
 
 st.title('Campaign Size Distribution')
 st.write('''
