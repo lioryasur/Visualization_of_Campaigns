@@ -185,12 +185,18 @@ def filter_CD(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered dataframe
     """
+
+    success_values = {0: 'Failure', 1: 'Success'}
+    df['success'] = df['success'].map(success_values)
+    df = df[df["repression_names"] != "unknown"]
+
     modify = st.checkbox("CD Filters")
 
     if not modify:
         return df
 
     df = df.copy()
+
 
     modification_container = st.container()
 

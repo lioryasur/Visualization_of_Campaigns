@@ -1,8 +1,5 @@
 # %%
 import dash
-from dash import Input, Output, State, html, dcc, dash_table, MATCH, ALL, ctx
-import dash_mantine_components as dmc
-from dash_iconify import DashIconify
 import pandas as pd
 import plotly.graph_objects as go
 from datetime import datetime, time, timedelta
@@ -17,7 +14,7 @@ import streamlit as st
 from datetime import time
 from Filters import filter_A, filter_B, filter_CD
 
-os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -29,7 +26,7 @@ fig_A = px.line(df_A, x='year', y='percent_participation', color='progress_names
 
 fig_A.update_layout(
     autosize=False,  # Disable autosize
-    width=1600,  # Set figure width
+    width=1000,  # Set figure width
     height=1000,  # Set figure height
     xaxis_title='Year',
     yaxis_title='Campaign Size',
@@ -61,8 +58,6 @@ fig_A.add_traces(linetype_trace.data)
 
 
 df_B = filter_B(df)  # Apply your filter function to the DataFrame, replace filter_B(df) with your actual function
-
-
 num_data_points_per_bin = 20
 df_B = df_B.sort_values(by='stat')
 # Create the histogram
@@ -138,15 +133,39 @@ df_CD['count'] = 1
 fig_CD = px.pie(df_CD, values='count', names='success',
              facet_col='repression_names', facet_row='resistance method',
              color='success',
-             color_discrete_map={'Success':'green', 'Failure':'red'})
+             color_discrete_map={'Success':'#00FF7F', 'Failure':'salmon'},
+            title='Violence and State Reaction Analysis',
+        category_orders={"repression_names": ["extreme repression", "moderate repression", "mild repression", "none"],
+                         "resistance": ["always violent", "never violent", "sometimes violent"]})
+
+
+
+
+
+
+for a in fig_CD.layout.annotations:
+    a.text = a.text.split("=")[1]
 
 # Customize the layout
 fig_CD.update_layout(
     autosize=False,
     width=800,
     height=500,
-    title_text="Violence and State Reaction Analysis"
+    title_text="Violence and State Reaction Analysis",
 )
+
+for i, a in enumerate(fig_CD['layout']['annotations']):
+    if a['text'] in  ["always violent", "never violent", "sometimes violent"]:
+        a["textangle"] = 50
+        a["xref"] = "paper"
+        a["yref"] = "paper"
+        # a["x"] = 0.02
+        # a["y"] = 1 - (i / 2)
+        a['align'] = "left"
+        #incrase font size
+    a['font'] = dict(size=15)
+
+
 
 
 
@@ -159,6 +178,8 @@ while the colors (which are hidden in the legend) represent different progress n
 You can hover over the lines to see more detailed information for each data point.
 ''')
 st.plotly_chart(fig_A)
+
+
 
 st.title('Campaign Size Distribution')
 st.write('''
