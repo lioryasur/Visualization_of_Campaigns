@@ -15,7 +15,7 @@ import numpy as np
 from app import app
 import streamlit as st
 from datetime import time
-from Filters import filter_A, filter_CD
+from Filters import filter_A, filter_B, filter_CD
 
 os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
@@ -60,7 +60,73 @@ fig_A.add_traces(color_trace.data)
 fig_A.add_traces(linetype_trace.data)
 
 
-import plotly.express as px
+df_B = filter_B(df)  # Apply your filter function to the DataFrame, replace filter_B(df) with your actual function
+
+
+num_data_points_per_bin = 20
+df_B = df_B.sort_values(by='stat')
+# Create the histogram
+bin_edges = np.array([0, 0.25, 0.5, 0.75, 1, 1.50, 2, 2.5, 3, 4, 100])
+
+# fig_B = px.histogram(df_B, x='stat', color='success', nbins=10)
+#
+# fig_B.update_layout(
+#     autosize=False,
+#     width=800,
+#     height=500,
+#     title_text="Campaign Size Distribution",
+#     barmode='stack'
+# )
+
+
+
+# Define colors for success values
+success_colors = {1: 'green', 0: 'red'}
+
+# Create a list to store the bar traces
+bar_traces = []
+
+# Iterate over the success values
+for success in success_colors.keys():
+    # Filter the counts based on success value
+    relevant = df_B[df_B['success'] == success]
+    counts, edges = np.histogram(relevant.stat, bins=bin_edges)
+    centers = 0.5 * (edges[:-1] + edges[1:])
+    widths = edges[1:] - edges[:-1]
+    # Create a bar trace with custom widths
+    bar_trace = go.Bar(
+        x=centers,
+        y=counts,
+        width=0.25,
+        name=success,
+        marker_color=success_colors[success]
+    )
+
+    # Append the bar trace to the list
+    bar_traces.append(bar_trace)
+
+# Create the figure with stacked bar traces
+fig_B = go.Figure(data=bar_traces)
+
+fig_B.update_layout(
+    autosize=False,
+    width=800,
+    height=500,
+    title_text="Campaign Size Distribution",
+    xaxis_title="Stat",
+    yaxis_title="Count",
+    barmode='stack',
+    xaxis_type='log'
+)
+
+st.title('Campaign Size Distribution')
+st.write('''
+# Explanation of the Plot
+This histogram shows the distribution of campaign sizes. The bars are split in the middle by color based on the success values.
+''')
+st.plotly_chart(fig_B)
+
+
 
 # Filter the DataFrame based on the campaign goal
 df_CD = filter_CD(df)  # Replace 'Your Campaign Goal' with your filter
@@ -70,7 +136,7 @@ df_CD['count'] = 1
 
 # Create a pie chart for each combination of state reaction and violence level
 fig_CD = px.pie(df_CD, values='count', names='success',
-             facet_col='repression', facet_row='prim_meth',
+             facet_col='repression_names', facet_row='resistance method',
              color='success',
              color_discrete_map={'Success':'green', 'Failure':'red'})
 
@@ -93,6 +159,15 @@ while the colors (which are hidden in the legend) represent different progress n
 You can hover over the lines to see more detailed information for each data point.
 ''')
 st.plotly_chart(fig_A)
+
+st.title('Campaign Size Distribution')
+st.write('''
+# Explanation of the Plot
+This histogram shows the distribution of campaign sizes. The color indicates whether each campaign was successful or not.
+''')
+st.plotly_chart(fig_B)
+
+
 st.plotly_chart(fig_CD)
 
 # appointment = st.slider(

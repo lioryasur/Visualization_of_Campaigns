@@ -91,7 +91,7 @@ def filter_A(df: pd.DataFrame) -> pd.DataFrame:
 
     if not modify:
         return df
-
+    df = df[df['population_bad'] == False]
     df = df.copy()
 
     modification_container = st.container()
@@ -124,6 +124,55 @@ def filter_A(df: pd.DataFrame) -> pd.DataFrame:
                 )
                 df = df[df[column].between(*user_num_input)]
     return df
+
+
+def calculate_stat(df, stat_choice):
+    result = {}
+    if stat_choice == 'avg':
+        result['stat'] = df['percent_participation'].mean()
+    elif stat_choice == 'max':
+        result['stat'] = df['percent_participation'].max()
+    elif stat_choice == 'sum':
+        result['stat'] = df['percent_participation'].sum()
+    elif stat_choice == 'last':
+        result['stat'] = df.loc[df['year'].idxmax()]['percent_participation']
+
+    result['success'] = df.loc[df['year'].idxmax()]['success']
+    return pd.Series(result)
+
+
+def filter_B(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a UI on top of a dataframe to let viewers filter columns
+
+    Args:
+        df (pd.DataFrame): Original dataframe
+
+    Returns:
+        pd.DataFrame: Filtered dataframe
+    """
+    modify = st.checkbox("Choose statistic")
+    df = df[df['population_bad'] == False]
+    if not modify:
+        df = df.groupby('id').apply(calculate_stat, stat_choice='avg').reset_index()  # Replace 'avg' with your actual choice
+        #print(df.columns)
+        #df = df.reset_index()
+        df.columns = ['id', 'stat', 'success']
+        return df
+
+    df = df.copy()
+
+    modification_container = st.container()
+
+    with modification_container:
+        stat_choice = st.selectbox("Choose Statistic",['Average', 'Max', 'Sum', 'Last'])
+        df_B = df.groupby('id').apply(calculate_stat, stat_choice=stat_choice).reset_index()  # Replace 'avg' with your actual choice
+        df = df.reset_index()
+        df.columns = ['id', 'stat', 'success']
+
+    return df
+# Define the user's choice for the statistic
+stat_choice = 'avg'  # Change this to 'avg', 'max', 'sum', or 'last' based on the user's choice
 
 
 def filter_CD(df: pd.DataFrame) -> pd.DataFrame:
