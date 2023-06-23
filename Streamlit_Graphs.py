@@ -12,9 +12,9 @@ import numpy as np
 from app import app
 import streamlit as st
 from datetime import time
-from Filters import filter_A, filter_B, filter_CD
-
-os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+from Filters import filter_A, filter_B, filter_CD, filter_E
+import plotly.subplots as sp
+os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -43,7 +43,7 @@ color_trace = px.line(
     x="year",
     y=np.full(len(df_A), -1000),
     color="progress_names",
-).update_traces(legendgrouptitle_text="Progress", legendgroup=str("Legends"))
+).update_traces(legendgrouptitle_text="progress_names", legendgroup=str("Legends"))
 
 linetype_trace = px.line(
     df_A,
@@ -119,8 +119,6 @@ st.write('''
 # Explanation of the Plot
 This histogram shows the distribution of campaign sizes. The bars are split in the middle by color based on the success values.
 ''')
-st.plotly_chart(fig_B)
-
 
 
 # Filter the DataFrame based on the campaign goal
@@ -168,6 +166,51 @@ for i, a in enumerate(fig_CD['layout']['annotations']):
 
 
 
+df_E = filter_E(df)
+# Combine goal, intervention, and progress to create unique nodes
+df_E['goal_intervention'] = df_E['goal_names'] + '_' + df_E['ab_internat']
+df_E['intervention_progress'] = df_E['ab_internat'] + '_' + df_E['progress_names']
+
+# Create unique mappings for your categories
+goal_intervention_mapping = {goal_intervention: i for i, goal_intervention in enumerate(df_E['goal_intervention'].unique())}
+intervention_progress_mapping = {intervention_progress: i + len(goal_intervention_mapping) for i, intervention_progress in enumerate(df_E['intervention_progress'].unique())}
+
+# Apply the mappings to your columns
+df_E['goal_intervention_codes'] = df_E['goal_intervention'].map(goal_intervention_mapping)
+df_E['intervention_progress_codes'] = df_E['intervention_progress'].map(intervention_progress_mapping)
+
+# Rest of the code...
+
+
+# Iterate over each goal
+E_figs = []
+for goal, df_goal in df_E.groupby('goal_names'):
+    # Create the value counts for the links
+    df_grouped_E = df_goal.groupby(['goal_intervention_codes', 'intervention_progress_codes']).size().reset_index(name='value')
+
+    # Concatenate all nodes
+    all_nodes_E = df_goal['goal_names'].unique().tolist() + df_goal['ab_internat'].unique().tolist() + df_goal['progress_names'].unique().tolist()
+
+    # Create a Sankey plot
+    fig_E = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color='black', width=0.5),
+            label=all_nodes_E,  # Make sure to update this as well to match the new nodes
+        ),
+        link=dict(
+            source=df_grouped_E['goal_intervention_codes'],  # Use the new source column
+            target=df_grouped_E['intervention_progress_codes'],  # Use the new target column
+            value=df_grouped_E['value']
+        )
+    )])
+
+    # Set the layout options
+    fig_E.update_layout(title_text=f'International Intervention Analysis: {goal}', font_size=10)
+    E_figs.append(fig_E)
+    # Display the plot in Streamlit
+
 
 st.title('Behaviour of Protests Across The Globe and Their Outcome ')
 st.write('''
@@ -190,6 +233,19 @@ st.plotly_chart(fig_B)
 
 
 st.plotly_chart(fig_CD)
+
+
+st.title('International Intervention Analysis')
+st.write('''
+# Explanation of the Plot
+This Sankey plot shows the relationship between international intervention and success in different types of campaigns. The plot is faceted by campaign goal, with each facet representing a different campaign goal. The first split is by international intervention, and each "tube" is further split by progress. The width of each tube represents the number of examples.
+''')
+col1, col2 = st.columns(2)
+
+with col1:
+    st.plotly_chart(E_figs[0])
+with col2:
+    st.plotly_chart(E_figs[1])
 
 # appointment = st.slider(
 #     "Schedule your appointment:",

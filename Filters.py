@@ -128,13 +128,13 @@ def filter_A(df: pd.DataFrame) -> pd.DataFrame:
 
 def calculate_stat(df, stat_choice):
     result = {}
-    if stat_choice == 'avg':
+    if stat_choice == 'Average':
         result['stat'] = df['percent_participation'].mean()
-    elif stat_choice == 'max':
+    elif stat_choice == 'Max':
         result['stat'] = df['percent_participation'].max()
-    elif stat_choice == 'sum':
+    elif stat_choice == 'Sum':
         result['stat'] = df['percent_participation'].sum()
-    elif stat_choice == 'last':
+    elif stat_choice == 'Last':
         result['stat'] = df.loc[df['year'].idxmax()]['percent_participation']
 
     result['success'] = df.loc[df['year'].idxmax()]['success']
@@ -152,22 +152,23 @@ def filter_B(df: pd.DataFrame) -> pd.DataFrame:
         pd.DataFrame: Filtered dataframe
     """
     modify = st.checkbox("Choose statistic")
+    df = df.copy()
+
     df = df[df['population_bad'] == False]
     if not modify:
-        df = df.groupby('id').apply(calculate_stat, stat_choice='avg').reset_index()  # Replace 'avg' with your actual choice
-        #print(df.columns)
-        #df = df.reset_index()
-        df.columns = ['id', 'stat', 'success']
-        return df
+        df_new = df.groupby('id').apply(calculate_stat, stat_choice='Average').reset_index()  # Replace 'avg' with your actual choice
+        print(df_new)
+        df_new.columns = ['id', 'stat', 'success']
 
-    df = df.copy()
+        return df_new
+
 
     modification_container = st.container()
 
     with modification_container:
         stat_choice = st.selectbox("Choose Statistic",['Average', 'Max', 'Sum', 'Last'])
-        df_B = df.groupby('id').apply(calculate_stat, stat_choice=stat_choice).reset_index()  # Replace 'avg' with your actual choice
-        df = df.reset_index()
+        df = df.groupby('id').apply(calculate_stat, stat_choice=stat_choice).reset_index()  # Replace 'avg' with your actual choice
+        print(df)
         df.columns = ['id', 'stat', 'success']
 
     return df
@@ -215,3 +216,33 @@ def filter_CD(df: pd.DataFrame) -> pd.DataFrame:
                 )
                 df = df[df[column].isin(user_cat_input)]
     return df
+
+def filter_E(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a UI on top of a dataframe to let viewers filter columns
+
+    Args:
+        df (pd.DataFrame): Original dataframe
+
+    Returns:
+        pd.DataFrame: Filtered dataframe
+    """
+
+    df = df.copy()
+    progress_values = {0: "status quo", 1: "visible gains short of concessions", 2: "limited concession achieved",
+                       3: "significant concessions achieved", 4: "complete success", -1: "ends in failure",
+                       -99: "unknown"}
+
+    df = df[df['ab_internat'] != -99]
+    new_df = {'goal_names': [], 'ab_internat': [], 'progress_names': []}
+    for id in df['id'].unique():
+        cur_df = df[df['id'] == id]
+        max_progress = cur_df['progress'].max()
+        new_df['progress_names'].append(progress_values[max_progress])
+        new_df['goal_names'].append(cur_df['goal_names'].iloc[0])
+        if 1 in cur_df['ab_internat'].unique():
+            new_df['ab_internat'].append('Material Reprucussions')
+        else:
+            new_df['ab_internat'].append('No Intervention')
+
+    return pd.DataFrame(new_df)
