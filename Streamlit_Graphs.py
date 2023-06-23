@@ -1,20 +1,16 @@
 # %%
-import dash
 import pandas as pd
 import plotly.graph_objects as go
-from datetime import datetime, time, timedelta
-import time as time_pck
 import os
-import dash_daq as daq
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
-from app import app
 import streamlit as st
-from datetime import time
 from Filters import filter_A, filter_B, filter_CD, filter_E
-import plotly.subplots as sp
 os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+
+
+st.set_page_config(layout="wide")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -181,30 +177,79 @@ df_E['intervention_progress_codes'] = df_E['intervention_progress'].map(interven
 
 # Rest of the code...
 
-
+progress_order = ['complete success', 'significant concessions achieved', 'limited concession achieved', 'visible gains short of concessions',
+                  'status quo', 'ends in failure']
 # Iterate over each goal
 E_figs = []
+color_dict = {
+    'No Intervention': '#FFA07A',
+    'Material Reprucussions': '#4682B4',
+    'complete success': '#006400',  # Darker green
+    'limited concession achieved': '#A2CD5A',  # Darker yellowgreen
+    'status quo': 'orange',  # Gold
+    'significant concessions achieved': '#6E8B3D',  # Lighter yellowgreen
+    'ends in failure': '#8B0000',  # Dark red
+    'visible gains short of concessions': '#FFD700',  # YellowGreen
+    'greater autonomy': '#808080'  # Gray
+}
 for goal, df_goal in df_E.groupby('goal_names'):
-    # Create the value counts for the links
-    df_grouped_E = df_goal.groupby(['goal_intervention_codes', 'intervention_progress_codes']).size().reset_index(name='value')
+    # Create unique mappings for your categories
+    goal_mapping = {name: i for i, name in enumerate(df_goal['goal_names'].unique())}
+    intervention_mapping = {name: i + len(goal_mapping) for i, name in enumerate(df_goal['ab_internat'].unique())}
+    progress_mapping = {name: i + len(goal_mapping) + len(intervention_mapping) for i, name in enumerate(df_goal['progress_names'].unique())}
 
-    # Concatenate all nodes
-    all_nodes_E = df_goal['goal_names'].unique().tolist() + df_goal['ab_internat'].unique().tolist() + df_goal['progress_names'].unique().tolist()
+    # Apply the mappings to your columns
+    df_goal['goal_codes'] = df_goal['goal_names'].map(goal_mapping)
+    df_goal['intervention_codes'] = df_goal['ab_internat'].map(intervention_mapping)
+    df_goal['progress_codes'] = df_goal['progress_names'].map(progress_mapping)
 
+
+    # Create source, target and value lists
+    source = df_goal['intervention_codes'].tolist()
+    target = df_goal['progress_codes'].tolist()
+    values = [1 for _ in range(len(source))]
+    sankey_data = pd.DataFrame({'source': source, 'target': target, 'values': values}).sort_values(['source', 'target'])
+    # Create colors for each source node
+    colors = df_goal['intervention_codes'].map({code: color for code, color in enumerate(['yellow', '#4682B4', '#FFA07A'])}).tolist()
+    node_positions = {
+        'complete success': [0.001, 0.15],
+        'significant concessions achieved': [0.001, 0.55],
+        'limited concession achieved': [0.4, 0.05],
+        'visible gains short of concessions': [0.4, 0.4],
+        'ends in failure': [0.8, 0.4]
+    }
+    # Create the label list with counts included
+    label_counts = df_goal['ab_internat'].value_counts().to_dict()
+    label = [f'{name} ({label_counts[name]})' if name in label_counts else name for name in
+             list(goal_mapping.keys()) + list(intervention_mapping.keys()) + list(progress_mapping.keys())]
+    # Create a list of all unique nodes in the correct order
+    #all_nodes_E = df_goal['goal_names'].unique().tolist() + df_goal['ab_internat'].unique().tolist()
+
+    # Add progress nodes in the correct order
+    all_nodes_E = df_goal['goal_names'].unique().tolist() + df_goal['ab_internat'].unique().tolist() + df_goal[
+        'progress_names'].unique().tolist()
+
+    # Manually order the labels based on desired_order
+    ordered_labels = [label for label in all_nodes_E if label not in progress_order] + [label for label in progress_order if label in all_nodes_E]
+    print(ordered_labels)
     # Create a Sankey plot
     fig_E = go.Figure(data=[go.Sankey(
         node=dict(
             pad=15,
             thickness=20,
             line=dict(color='black', width=0.5),
-            label=all_nodes_E,  # Make sure to update this as well to match the new nodes
+            label=ordered_labels,
+            color=[color_dict.get(node, '#808080') for node in ordered_labels]
         ),
         link=dict(
-            source=df_grouped_E['goal_intervention_codes'],  # Use the new source column
-            target=df_grouped_E['intervention_progress_codes'],  # Use the new target column
-            value=df_grouped_E['value']
+            source=source,
+            target=target,
+            value=values,
+            color=colors,  # Add the colors
         )
     )])
+
+    # Display the plot
 
     # Set the layout options
     fig_E.update_layout(title_text=f'International Intervention Analysis: {goal}', font_size=10)
