@@ -87,11 +87,34 @@ def filter_A(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered dataframe
     """
+
     modify = st.checkbox("Add filters")
 
     if not modify:
-        return df
-    df = df[df['population_bad'] == False]
+        left, right = st.columns((1, 20))
+
+        column = 'year'
+        _min = float(df[column].min())
+        _max = float(df[column].max())
+        step = (_max - _min) / 100
+        user_num_input = right.slider(
+            f"Values for {column}",
+            min_value=float(_min),
+            max_value=float(_max),
+            value=(float(1983), float(1993)),  # Set the default range
+            step=float(step),
+        )
+        df = df[df[column].between(*user_num_input)]
+        df.sort_values(by=['year'], inplace=True)
+        cy0id = df[df["cyear"] == 0]["id"]
+        cy1id = df[df["cyear"] == 1]["id"]
+
+        ids = set(cy0id).intersection(set(cy1id))
+        df = df[df["id"].isin(ids)]
+
+        return df, df["id"].unique()
+
+    df = df[df['percent_participation'] < 12]
     df = df.copy()
 
     modification_container = st.container()
@@ -117,13 +140,20 @@ def filter_A(df: pd.DataFrame) -> pd.DataFrame:
                 step = (_max - _min) / 100
                 user_num_input = right.slider(
                     f"Values for {column}",
-                    min_value=_min,
-                    max_value=_max,
-                    value=(_min, _max),
-                    step=step,
+                    min_value=float(_min),
+                    max_value=float(_max),
+                    value=(float(1983), float(1993)),  # Set the default range
+                    step=float(step),
                 )
                 df = df[df[column].between(*user_num_input)]
-    return df
+                df.sort_values(by=['year'], inplace=True)
+                cy0id = df[df["cyear"] == 0]["id"]
+                cy1id = df[df["cyear"] == 1]["id"]
+
+                ids = set(cy0id).intersection(set(cy1id))
+                df = df[df["id"].isin(ids)]
+
+    return df, df["id"].unique()
 
 
 def calculate_stat(df, stat_choice):
@@ -151,16 +181,30 @@ def filter_B(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered dataframe
     """
-    modify = st.checkbox("Choose statistic")
+    modify = st.checkbox("Choose statistic for calculating percent participation of campaign across its years")
+
+
+
     df = df.copy()
 
+    campaign_type = st.selectbox("Large or Small Campaigns (by percent of populations)", ['Large', 'Small'], index=1)
+
+
+
     df = df[df['population_bad'] == False]
+
     if not modify:
         df_new = df.groupby('id').apply(calculate_stat, stat_choice='Average').reset_index()  # Replace 'avg' with your actual choice
-        print(df_new)
         df_new.columns = ['id', 'stat', 'success']
 
+        df_new = df_new[df_new['stat'] < 15]
+        if campaign_type == 'Large':
+            df_new = df_new[df_new['stat'] > 2]
+        else:
+            df_new = df_new[df_new['stat'] < 2]
+
         return df_new
+
 
 
     modification_container = st.container()
@@ -170,6 +214,12 @@ def filter_B(df: pd.DataFrame) -> pd.DataFrame:
         df = df.groupby('id').apply(calculate_stat, stat_choice=stat_choice).reset_index()  # Replace 'avg' with your actual choice
         print(df)
         df.columns = ['id', 'stat', 'success']
+
+    df = df[df['stat'] < 15]
+    if campaign_type == 'Large':
+        df = df[df['stat'] > 2]
+    else:
+        df = df[df['stat'] < 2]
 
     return df
 # Define the user's choice for the statistic
