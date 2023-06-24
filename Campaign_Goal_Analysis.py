@@ -19,11 +19,85 @@ st.set_page_config(layout="wide")
 
 
 
-#os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
-os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+# os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
+
+
+df_F =  filter_F(df)
+df_F['progress_names'] = df_F['progress_names'].str.title()
+df_F['goal_names'] = df_F['goal_names'].str.title()
+
+
+df_F['progress_names'] = df_F['progress_names'].replace({'ends in failure': 'Failed Immediately'})
+df_F = df_F.groupby(['goal_names', 'progress_names']).size().reset_index(name='counts')
+df_F['percent'] = df_F.groupby(['goal_names'])['counts'].transform(lambda x: x / x.sum() * 100)
+df_F['percent_str'] = df_F['percent'].round(2).astype(str) + '%'
+
+# Create a bar plot faceted by goal and x axis
+fig_F = px.bar(df_F, x="progress_names", y="percent", facet_col="goal_names",
+               color="progress_names",
+               color_discrete_sequence=px.colors.sequential.YlGn,
+               color_discrete_map={"Failed Immediately".title(): "salmon",
+                                   "status quo".title(): "#ffffe5",
+                                   "limited concession achieved".title(): "#d9f0a3",
+                                   "visible gains short of concessions".title(): "#addd8e",
+                                   "significant concessions achieved".title(): "#41ab5d",
+                                   "complete success".title(): "#006837"},
+               category_orders={"progress_names": ["Failed Immediately",
+                                                    "status quo".title(),
+                                                   "limited concession achieved".title(),
+                                                   "visible gains short of concessions".title(),
+                                                   "significant concessions achieved".title(),
+                                                   "complete success".title()]},
+               labels={"progress_names": "Best Achievement in Campaign"},
+               text="percent_str",
+               facet_col_wrap=2, height=600, width=1100,
+               )
+
+
+#limit y axis to 0-40
+fig_F.update_layout(
+    coloraxis={"colorscale": px.colors.sequential.Darkmint},
+    yaxis=dict(range=[0, 40]),
+    legend=dict(
+    orientation="h",
+    yanchor="bottom",
+
+    y=-0.15  # change this value to move the legend lower
+
+        # xanchor="left",
+) )
+
+
+#remove progress names from x axis but keep the pacet titles
+fig_F.update_xaxes(title_text='')
+fig_F.update_xaxes(showticklabels=False)
+fig_F.update_xaxes(showgrid=False)
+
+
+
+for a in fig_F.layout.annotations:
+    a.text = a.text.split("=")[1]
+    #increase font size
+    a.font.size = 18
+
+fig_F.update_layout(
+
+    yaxis_title='Percent of Total',
+    xaxis={'fixedrange': True},  # Disable dragging on x-axis
+    yaxis={'fixedrange': True, 'range': [0, 45]},    # Use log scale and disable dragging on y-axis,
+)
+
+st.title('Campaign Goal Comparison')
+st.write('''
+This is a bar plot displaying the distribution of progress for each campaign goal. The x axis is the best progress achieved, and the y axis is the percent of campaigns that fall into that progress category. The color of the bars represents the progress category. The facet columns represent the campaign goal.
+
+Please note that all the campaigns that don't have "complete success" as a progress category have ended in failure, but we chose the best status achieved for the campaigns.
+''')
+st.plotly_chart(fig_F)
 
 
 # Filter the DataFrame based on the campaign goal
@@ -229,75 +303,4 @@ with col2:
     st.plotly_chart(E_figs[1])
 
 
-df_F =  filter_F(df)
-df_F['progress_names'] = df_E['progress_names'].str.title()
-df_F['goal_names'] = df_E['goal_names'].str.title()
 
-
-df_F['progress_names'] = df_F['progress_names'].replace({'ends in failure': 'Failed Immediately'})
-df_F = df_F.groupby(['goal_names', 'progress_names']).size().reset_index(name='counts')
-df_F['percent'] = df_F.groupby(['goal_names'])['counts'].transform(lambda x: x / x.sum() * 100)
-df_F['percent_str'] = df_F['percent'].round(2).astype(str) + '%'
-
-# Create a bar plot faceted by goal and x axis
-fig_F = px.bar(df_F, x="progress_names", y="percent", facet_col="goal_names",
-               color="progress_names",
-               color_discrete_sequence=px.colors.sequential.YlGn,
-               color_discrete_map={"Failed Immediately".title(): "salmon",
-                                   "status quo".title(): "#ffffe5",
-                                   "limited concession achieved".title(): "#d9f0a3",
-                                   "visible gains short of concessions".title(): "#addd8e",
-                                   "significant concessions achieved".title(): "#41ab5d",
-                                   "complete success".title(): "#006837"},
-               category_orders={"progress_names": ["Failed Immediately",
-                                                    "status quo".title(),
-                                                   "limited concession achieved".title(),
-                                                   "visible gains short of concessions".title(),
-                                                   "significant concessions achieved".title(),
-                                                   "complete success".title()]},
-               labels={"progress_names": "Best Achievement in Campaign"},
-               text="percent_str",
-               facet_col_wrap=2, height=600, width=1100,
-               )
-
-
-#limit y axis to 0-40
-fig_F.update_layout(
-    coloraxis={"colorscale": px.colors.sequential.Darkmint},
-    yaxis=dict(range=[0, 40]),
-    legend=dict(
-    orientation="h",
-    yanchor="bottom",
-
-    y=-0.15  # change this value to move the legend lower
-
-        # xanchor="left",
-) )
-
-
-#remove progress names from x axis but keep the pacet titles
-fig_F.update_xaxes(title_text='')
-fig_F.update_xaxes(showticklabels=False)
-fig_F.update_xaxes(showgrid=False)
-
-
-
-for a in fig_F.layout.annotations:
-    a.text = a.text.split("=")[1]
-    #increase font size
-    a.font.size = 18
-
-fig_F.update_layout(
-
-    yaxis_title='Percent of Total',
-    xaxis={'fixedrange': True},  # Disable dragging on x-axis
-    yaxis={'fixedrange': True, 'range': [0, 45]},    # Use log scale and disable dragging on y-axis,
-)
-
-st.title('Campaign Goal Comparison')
-st.write('''
-This is a bar plot displaying the distribution of progress for each campaign goal. The x axis is the best progress achieved, and the y axis is the percent of campaigns that fall into that progress category. The color of the bars represents the progress category. The facet columns represent the campaign goal.
-
-Please note that all the campaigns that don't have "complete success" as a progress category have ended in failure, but we chose the best status achieved for the campaigns.
-''')
-st.plotly_chart(fig_F)

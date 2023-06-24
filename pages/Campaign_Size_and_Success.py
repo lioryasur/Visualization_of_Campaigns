@@ -10,8 +10,8 @@ st.set_page_config(layout="wide")
 
 
 
-#os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
-os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+# os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -136,18 +136,19 @@ for i, id in enumerate(ids):
             # Use the first values of the custom data columns
         ))
 
-
+years_range = int((df_A['year'].max() - df_A['year'].min())//2)
+years_grid = list(range(df_A['year'].min(), df_A['year'].max(), 2))
 max_val = df_A['percent_participation'].max()
 fig_A.update_layout(
     autosize=False,  # Disable autosize
-    width=1000,  # Set figure width
+    width=1100,  # Set figure width
     height=790,  # Set figure height
     xaxis_title='Year',
     yaxis_title='Campaign Name',
     xaxis={'fixedrange': True},  # Disable dragging on x-axis
     yaxis={'fixedrange': True, 'range': [0, len(ids)],
            'tickvals': list(range(len(ids))),  # Set tick values to the index of each campaign
-           'ticktext': campaign_names, 'showgrid': False  # Set tick labels to the names of the campaigns
+           'ticktext': campaign_names, 'showgrid': True  # Set tick labels to the names of the campaigns
            },    # Use log scale and disable dragging on y-axis,
 
 )
@@ -197,7 +198,6 @@ st.write('''
 This histogram shows Chances of success by Campaign Size (Relative to Country Population).
 ''')
 from filter_B import filter_B
-
 
 
 df_B2, df_B1, num_bins = filter_B(df, 'Small')
