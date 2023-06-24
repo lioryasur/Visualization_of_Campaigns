@@ -1,10 +1,6 @@
-dash
-dash-mantine-components==0.10.2
-dash-iconify
-dash-extensions
-datetime
-pandas
-gunicorn
-openpyxl
-dash_daq
-scikit-learn
+numpy==1.25.0
+pandas==2.0.2
+plotly==5.15.0
+streamlit==1.15.0
+streamlit_extras==0.2.7
+altair==4.0
