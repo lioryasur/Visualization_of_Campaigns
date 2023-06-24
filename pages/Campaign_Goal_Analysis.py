@@ -6,7 +6,7 @@ import sys
 sys.path.append("..")
 st.set_page_config(layout="wide")
 
-from Filters import filter_CD, filter_E, filter_F
+from ..Filters import filter_CD, filter_E, filter_F
 
 
 df = pd.read_csv('data/processed_data.csv')

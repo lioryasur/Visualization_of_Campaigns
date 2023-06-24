@@ -194,7 +194,7 @@ st.title('Campaign Size Effect on Success Rate')
 st.write('''
 This histogram shows Chances of success by Campaign Size (Relative to Country Population).
 ''')
-from filter_B import filter_B
+from ..filter_B import filter_B
 
 
 df_B2, df_B1, num_bins = filter_B(df, 'Small')
