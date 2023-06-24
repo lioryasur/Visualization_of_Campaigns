@@ -18,7 +18,8 @@ st.set_page_config(layout="wide")
 
 
 
-os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+#os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -86,6 +87,24 @@ df_E['intervention_progress_codes'] = df_E['intervention_progress'].map(interven
 progress_order = ['complete success', 'significant concessions achieved', 'limited concession achieved', 'visible gains short of concessions',
                   'status quo', 'ends in failure']
 # Iterate over each goal
+df_E = filter_E(df)
+# Combine goal, intervention, and progress to create unique nodes
+df_E['goal_intervention'] = df_E['goal_names'] + '_' + df_E['ab_internat']
+df_E['intervention_progress'] = df_E['ab_internat'] + '_' + df_E['progress_names']
+
+# Create unique mappings for your categories
+goal_intervention_mapping = {goal_intervention: i for i, goal_intervention in enumerate(df_E['goal_intervention'].unique())}
+intervention_progress_mapping = {intervention_progress: i + len(goal_intervention_mapping) for i, intervention_progress in enumerate(df_E['intervention_progress'].unique())}
+
+# Apply the mappings to your columns
+df_E['goal_intervention_codes'] = df_E['goal_intervention'].map(goal_intervention_mapping)
+df_E['intervention_progress_codes'] = df_E['intervention_progress'].map(intervention_progress_mapping)
+
+# Rest of the code...
+
+progress_order = ['complete success', 'significant concessions achieved', 'limited concession achieved', 'visible gains short of concessions',
+                  'status quo', 'ends in failure']
+# Iterate over each goal
 E_figs = []
 color_dict = {
     'No Intervention': '#FFA07A',
@@ -100,15 +119,12 @@ color_dict = {
 }
 for goal, df_goal in df_E.groupby('goal_names'):
     # Create unique mappings for your categories
-    goal_mapping = {name: i for i, name in enumerate(df_goal['goal_names'].unique())}
-    intervention_mapping = {name: i + len(goal_mapping) for i, name in enumerate(df_goal['ab_internat'].unique())}
-    progress_mapping = {name: i + len(goal_mapping) + len(intervention_mapping) for i, name in enumerate(df_goal['progress_names'].unique())}
+    intervention_mapping = {name: i for i, name in enumerate(df_goal['ab_internat'].unique())}
+    progress_mapping = {name: i + len(intervention_mapping) for i, name in enumerate(df_goal['progress_names'].unique())}
 
     # Apply the mappings to your columns
-    df_goal['goal_codes'] = df_goal['goal_names'].map(goal_mapping)
     df_goal['intervention_codes'] = df_goal['ab_internat'].map(intervention_mapping)
     df_goal['progress_codes'] = df_goal['progress_names'].map(progress_mapping)
-
 
     # Create source, target and value lists
     source = df_goal['intervention_codes'].tolist()
@@ -116,24 +132,27 @@ for goal, df_goal in df_E.groupby('goal_names'):
     values = [1 for _ in range(len(source))]
     sankey_data = pd.DataFrame({'source': source, 'target': target, 'values': values}).sort_values(['source', 'target'])
     # Create colors for each source node
-    colors = df_goal['intervention_codes'].map({code: color for code, color in enumerate(['yellow', '#4682B4', '#FFA07A'])}).tolist()
+    colors = df_goal['intervention_codes'].map({code: color for code, color in enumerate(['#4682B4','#FFA07A'])}).tolist()
     node_positions = {
-        'complete success': [0.001, 0.15],
-        'significant concessions achieved': [0.001, 0.55],
-        'limited concession achieved': [0.4, 0.05],
-        'visible gains short of concessions': [0.4, 0.4],
-        'ends in failure': [0.8, 0.4]
+        'Material Reprucussions': [0.001, 0.001],
+        'No Intervention': [0.001, 0.7],
+        'complete success': [0.999, 0.001],
+        'significant concessions achieved': [0.999, 0.2],
+        'limited concession achieved': [0.999, 0.4],
+        'visible gains short of concessions': [0.999, 0.6],
+        'status quo': [0.999, 0.8],
+        'ends in failure': [.999, .999]
     }
     # Create the label list with counts included
     label_counts = df_goal['ab_internat'].value_counts().to_dict()
     label = [f'{name} ({label_counts[name]})' if name in label_counts else name for name in
-             list(goal_mapping.keys()) + list(intervention_mapping.keys()) + list(progress_mapping.keys())]
+             list(intervention_mapping.keys()) + list(progress_mapping.keys())]
     # Create a list of all unique nodes in the correct order
     #all_nodes_E = df_goal['goal_names'].unique().tolist() + df_goal['ab_internat'].unique().tolist()
 
     # Add progress nodes in the correct order
-    all_nodes_E = df_goal['goal_names'].unique().tolist() + df_goal['ab_internat'].unique().tolist() + df_goal[
-        'progress_names'].unique().tolist()
+    all_nodes_E = df_goal['ab_internat'].unique().tolist() + df_goal['progress_names'].unique().tolist()
+    #print(all_nodes_E)
 
     # Manually order the labels based on desired_order
     ordered_labels = [label for label in all_nodes_E if label not in progress_order] + [label for label in progress_order if label in all_nodes_E]
@@ -145,7 +164,9 @@ for goal, df_goal in df_E.groupby('goal_names'):
             thickness=20,
             line=dict(color='black', width=0.5),
             label=ordered_labels,
-            color=[color_dict.get(node, '#808080') for node in ordered_labels]
+            color=[color_dict.get(node, '#808080') for node in ordered_labels],
+            x = [node_positions.get(node, [0.01, 0.01])[0] for node in ordered_labels],
+            y = [node_positions.get(node, [0.01, 0.01])[1] for node in ordered_labels]
         ),
         link=dict(
             source=source,
@@ -160,8 +181,6 @@ for goal, df_goal in df_E.groupby('goal_names'):
     # Set the layout options
     fig_E.update_layout(title_text=f'{goal}', font_size=10)
     E_figs.append(fig_E)
-
-
 
 st.title('Campaign Size Distribution')
 st.write('''
