@@ -53,11 +53,11 @@ fig_F.update_layout(
     coloraxis={"colorscale": px.colors.sequential.Darkmint},
     yaxis=dict(range=[0, 40]),
     legend=dict(
+    title=dict(font=dict(size=20)),
     orientation="h",
     yanchor="bottom",
     y=-0.15,
     # cange legend title font size
-    legend_title=dict(font=dict(size=20)),
     font=dict(size = 18)# change this value to move the legend lower
 ) )
 
