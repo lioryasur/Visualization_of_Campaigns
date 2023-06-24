@@ -6,10 +6,11 @@ import plotly.graph_objects as go
 import numpy as np
 import streamlit as st
 import sys
-sys.path.append("..")
-st.set_page_config(layout="wide"
+print(os.getcwd())
+st.set_page_config(layout="wide")
 
-df = pd.read_csv('data/processed_data.csv')
+
+df = pd.read_csv('..\data\processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
 #
 st.title('Campaign By Sizes and their Achievements Over Time')
@@ -20,7 +21,7 @@ The the colors represent the Achievements for that Year
 You can hover over the lines to see more detailed information for each data point.
 ''')
 
-from Filters import filter_A
+from ..Filters import filter_A
 
 df_A, ids = filter_A(df)
 
