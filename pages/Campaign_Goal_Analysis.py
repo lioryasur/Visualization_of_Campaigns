@@ -1,15 +1,13 @@
 import pandas as pd
-import os
 import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
-from Filters import filter_CD, filter_E, filter_F
+import sys
+sys.path.append("..")
 st.set_page_config(layout="wide")
 
+from Filters import filter_CD, filter_E, filter_F
 
-
-os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
-# os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
