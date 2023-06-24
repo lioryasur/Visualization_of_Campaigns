@@ -143,16 +143,20 @@ years_range = int((df_A['year'].max() - df_A['year'].min())//2)
 years_grid = list(range(df_A['year'].min(), df_A['year'].max(), 2))
 max_val = df_A['percent_participation'].max()
 fig_A.update_layout(
-    autosize=False,  # Disable autosize
-    width=1600,  # Set figure width
-    height=900,  # Set figure height
+    # autosize=False,  # Disable autosize
+    width=1500,  # Set figure width
+    height=800,  # Set figure height
     xaxis_title='Year',
     yaxis_title='Campaign Name',
     xaxis={'fixedrange': True},  # Disable dragging on x-axis
     yaxis={'fixedrange': True, 'range': [0, len(ids)],
            'tickvals': list(range(len(ids))),  # Set tick values to the index of each campaign
            'ticktext': campaign_names, 'showgrid': True  # Set tick labels to the names of the campaigns
-           },    # Use log scale and disable dragging on y-axis,
+           },
+
+    title=dict(text='', x=0.5, xanchor='center', y=0.9),
+    autosize=True,
+    margin=dict(t=0),
 
 )
 
@@ -191,6 +195,7 @@ width_trace = go.Scatter(
 )
 
 fig_A.add_trace(width_trace)
+
 
 
 st.plotly_chart(fig_A)
@@ -246,7 +251,8 @@ trace = go.Bar(
 layout = go.Layout(
     title='Small Campaigns (Up to 1.5%)',
     xaxis=dict(title='Percent of Population Present In Campaign'),
-    yaxis=dict(title='Success Percentage')
+    yaxis=dict(title='Success Percentage'),
+    width = 800
 )
 
 
@@ -296,7 +302,7 @@ layout = go.Layout(
     title='Large Campaigns (Larger than 1.5%)',
     xaxis=dict(title='Percent of Population Present In Campaign'),
     yaxis=dict(title='Success Percentage'),
-    width = 900,
+    width = 800,
 )
 
 
