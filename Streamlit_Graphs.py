@@ -230,6 +230,8 @@ with col2:
 
 
 df_F =  filter_F(df)
+df_F['progress_names'] = df_E['progress_names'].str.title()
+df_F['goal_names'] = df_E['goal_names'].str.title()
 
 
 df_F['progress_names'] = df_F['progress_names'].replace({'ends in failure': 'Failed Immediately'})
@@ -241,18 +243,18 @@ df_F['percent_str'] = df_F['percent'].round(2).astype(str) + '%'
 fig_F = px.bar(df_F, x="progress_names", y="percent", facet_col="goal_names",
                color="progress_names",
                color_discrete_sequence=px.colors.sequential.YlGn,
-               color_discrete_map={"Failed Immediately": "salmon",
-                                   "status quo": "#ffffe5",
-                                   "limited concession achieved": "#d9f0a3",
-                                   "visible gains short of concessions": "#addd8e",
-                                   "significant concessions achieved": "#41ab5d",
-                                   "complete success": "#006837"},
+               color_discrete_map={"Failed Immediately".title(): "salmon",
+                                   "status quo".title(): "#ffffe5",
+                                   "limited concession achieved".title(): "#d9f0a3",
+                                   "visible gains short of concessions".title(): "#addd8e",
+                                   "significant concessions achieved".title(): "#41ab5d",
+                                   "complete success".title(): "#006837"},
                category_orders={"progress_names": ["Failed Immediately",
-                                                    "status quo",
-                                                   "limited concession achieved",
-                                                   "visible gains short of concessions",
-                                                   "significant concessions achieved",
-                                                   "complete success"]},
+                                                    "status quo".title(),
+                                                   "limited concession achieved".title(),
+                                                   "visible gains short of concessions".title(),
+                                                   "significant concessions achieved".title(),
+                                                   "complete success".title()]},
                labels={"progress_names": "Best Achievement in Campaign"},
                text="percent_str",
                facet_col_wrap=2, height=600, width=1100,
