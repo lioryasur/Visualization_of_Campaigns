@@ -83,30 +83,22 @@ for i, id in enumerate(ids):
             y=[i]*len(df_years),
             mode='lines + markers',
             marker = dict(color = df_years['color'].iloc[0]),
-            line=dict(color=df_years['color'].iloc[0], width=width)
+            line=dict(color=df_years['color'].iloc[0], width=width),
+            customdata=list(zip(df_years['id'], df_years['progress_names'], df_years['percent_participation'], df_years['camp_name'])),
+            # Use a list of tuples containing the id and progress names
+            hovertemplate='Campaign ID: %{customdata[0]}<br>Year: %{x}<br>Progress: %{customdata[1]} <br> Relative Size: %{customdata[2]} <br> Campaign Name: %{customdata[3]}'
+            # Use the first values of the custom data columns
         ))
-
-# for color, progress in zip(colors, progresses):
-#     fig_A.add_trace(go.Scatter(
-#         x=[], # Initialize empty x values
-#         y=[], # Initialize empty y values
-#         mode='lines',
-#         line=dict(color=color),
-#         name=progress, # Assign each color a name
-#         legendgrouptitle_text=progress, # Add a title for each legend group
-#         showlegend=True # Show all traces in the legend
-#     ))
-
 
 
 max_val = df_A['percent_participation'].max()
 fig_A.update_layout(
     autosize=False,  # Disable autosize
     width=1000,  # Set figure width
-    height=810,  # Set figure height
+    height=790,  # Set figure height
     xaxis_title='Year',
-    yaxis_title='Campign',
-    title='Campaign Sizes over Time',
+    yaxis_title='Campaign',
+    title='Campaign Sizes (Relative to Country) and their Achievements Over Time <br> <sup>With Colors for Progress and Width for size <sup>',
     xaxis={'fixedrange': True},  # Disable dragging on x-axis
     yaxis={ 'fixedrange': True, 'range': [0, len(ids)]},
     # Use log scale and disable dragging on y-axis,
@@ -130,7 +122,7 @@ color_trace = px.line(
     color="progress_names",
     color_discrete_map=color_dict, # Use the color_dict as the color map
     category_orders={"progress_names": progress_order} # Use the progress_order as the category order
-).update_traces(legendgrouptitle_text="progress", legendgroup=str("Legends"))
+).update_traces(legendgrouptitle_text="Campaign Progress", legendgroup=str("Legends"))
 
 
 fig_A.add_traces(color_trace.data)
@@ -141,7 +133,7 @@ width_trace = go.Scatter(
     y=[-1000], # Use the same dummy y value as the color trace
     mode='markers', # Use markers instead of lines
     marker=dict(color='white', size=10, symbol='triangle-left'), # Use a triangle symbol with a constant size and color
-    name='width = percent participation', # Use the desired legend text
+    name='width = Relative Campaign Size', # Use the desired legend text
     showlegend=True # Show this trace in the legend
 )
 
@@ -198,11 +190,7 @@ layout = go.Layout(
 #Create the figure
 fig_B = go.Figure(data=[trace], layout=layout)
 
-st.title('Campaign Size Distribution')
-st.write('''
-Explanation of the Plot
-This histogram shows the distribution of campaign sizes. The bars are split in the middle by color based on the success values.
-''')
+
 
 
 # Filter the DataFrame based on the campaign goal
@@ -246,7 +234,6 @@ for i, a in enumerate(fig_CD['layout']['annotations']):
         a['align'] = "left"
         #incrase font size
     a['font'] = dict(size=15)
-
 
 
 
@@ -347,8 +334,8 @@ st.title('Behaviour of Protests Across The Globe and Their Outcome ')
 st.write('''
 # Explanation of the Plot
 Here we show the size of different campaigns over time. 
-The different line styles represent different campaign goals, 
-while the colors (which are hidden in the legend) represent different progress names. 
+The width represents the Relative size of the campaign compared to the population of the country in a specific year.
+The the colors represent the Achievements for that Year 
 You can hover over the lines to see more detailed information for each data point.
 ''')
 st.plotly_chart(fig_A)
@@ -358,12 +345,17 @@ st.plotly_chart(fig_A)
 st.title('Campaign Size Distribution')
 st.write('''
 # Explanation of the Plot
-This histogram shows the distribution of campaign sizes. The color indicates whether each campaign was successful or not.
+This histogram shows Chances of success by Campaign Size (Relative to Country Population).
 ''')
 st.plotly_chart(fig_B)
 
 
+st.title('Campaign Size Distribution')
+st.write('''
+This histogram shows the the success rate of campaigns based on the percentage of the population involved in the campaign.
+''')
 st.plotly_chart(fig_CD)
+
 
 
 st.title('International Intervention Analysis')
