@@ -67,7 +67,7 @@ def filter_A(df: pd.DataFrame):
             f"Select a range of years to inspect",
             min_value=int(_min),
             max_value=int(_max),
-            value=(int(1983), int(1993)),  # Set the default range
+            value=(int(2006), int(2013)),  # Set the default range
             step=int(step),
         )
         df = df[df[column].between(*user_num_input)]

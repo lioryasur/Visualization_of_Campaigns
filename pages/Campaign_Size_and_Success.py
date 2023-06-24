@@ -144,8 +144,8 @@ years_grid = list(range(df_A['year'].min(), df_A['year'].max(), 2))
 max_val = df_A['percent_participation'].max()
 fig_A.update_layout(
     autosize=False,  # Disable autosize
-    width=1100,  # Set figure width
-    height=1080,  # Set figure height
+    width=1600,  # Set figure width
+    height=900,  # Set figure height
     xaxis_title='Year',
     yaxis_title='Campaign Name',
     xaxis={'fixedrange': True},  # Disable dragging on x-axis
@@ -295,7 +295,8 @@ trace = go.Bar(
 layout = go.Layout(
     title='Large Campaigns (Larger than 1.5%)',
     xaxis=dict(title='Percent of Population Present In Campaign'),
-    yaxis=dict(title='Success Percentage')
+    yaxis=dict(title='Success Percentage'),
+    width = 900,
 )
 
 
