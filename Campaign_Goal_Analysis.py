@@ -44,7 +44,7 @@ fig_F = px.bar(df_F, x="progress_names", y="percent", facet_col="goal_names",
                                                    "complete success".title()]},
                labels={"progress_names": "Best Achievement in Campaign"},
                text="percent_str",
-               facet_col_wrap=2, height=600, width=1500,
+               facet_col_wrap=2, height=600, width=1600,
                )
 
 
@@ -55,7 +55,6 @@ fig_F.update_layout(
     legend=dict(
     orientation="h",
     yanchor="bottom",
-
     y=-0.15  # change this value to move the legend lower
 
         # xanchor="left",

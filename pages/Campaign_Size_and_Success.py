@@ -179,7 +179,7 @@ color_trace = px.line(
     color="progress_names",
     color_discrete_map=color_dict, # Use the color_dict as the color map
     category_orders={"progress_names": progress_order} # Use the progress_order as the category order
-).update_traces(legendgrouptitle_text="Campaign Progress", legendgroup=str("Legends"))
+).update_traces(legendgrouptitle_text="Campaign Progress", legendgroup=str("Legends"), legend=dict(fontsize=12))
 
 
 fig_A.add_traces(color_trace.data)
