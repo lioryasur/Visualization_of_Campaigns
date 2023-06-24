@@ -6,11 +6,12 @@ import plotly.graph_objects as go
 import numpy as np
 import streamlit as st
 import sys
-print(os.getcwd())
 st.set_page_config(layout="wide")
 
+os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+print(os.getcwd())
 
-df = pd.read_csv('..\data\processed_data.csv')
+df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
 #
 st.title('Campaign By Sizes and their Achievements Over Time')
@@ -20,8 +21,7 @@ The width represents the Relative size of the campaign compared to the populatio
 The the colors represent the Achievements for that Year
 You can hover over the lines to see more detailed information for each data point.
 ''')
-
-from ..Filters import filter_A
+from Filters.Filters import filter_A
 
 df_A, ids = filter_A(df)
 
@@ -194,7 +194,7 @@ st.title('Campaign Size Effect on Success Rate')
 st.write('''
 This histogram shows Chances of success by Campaign Size (Relative to Country Population).
 ''')
-from ..filter_B import filter_B
+from Filters.filter_B import filter_B
 
 
 df_B2, df_B1, num_bins = filter_B(df, 'Small')
