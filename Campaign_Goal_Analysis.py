@@ -55,9 +55,8 @@ fig_F.update_layout(
     legend=dict(
     orientation="h",
     yanchor="bottom",
-    y=-0.15  # change this value to move the legend lower
-
-        # xanchor="left",
+    y=-0.15,
+    font=dict(size = 14)# change this value to move the legend lower
 ) )
 
 
