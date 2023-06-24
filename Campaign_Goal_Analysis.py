@@ -57,7 +57,7 @@ fig_F.update_layout(
     yanchor="bottom",
     y=-0.15,
     # cange legend title font size
-    legend_title_font=dict(size=20),
+    legend_title=dict(font=dict(size=20)),
     font=dict(size = 18)# change this value to move the legend lower
 ) )
 
