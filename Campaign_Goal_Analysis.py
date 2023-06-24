@@ -7,14 +7,14 @@ from streamlit_extras.switch_page_button import switch_page
 
 st.set_page_config(layout="wide",initial_sidebar_state="collapsed")
 
-if st.button("Campaign_Size_and_Success"):
+if st.button("Go to Campaign Size and Success"):
     switch_page("Campaign_Size_and_Success")
 
 from Filters.Filters import filter_CD, filter_E, filter_F
+print(os.getcwd())
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
-
 
 df_F =  filter_F(df)
 df_F['progress_names'] = df_F['progress_names'].str.title()
@@ -57,7 +57,6 @@ fig_F.update_layout(
     yanchor="bottom",
     y=-0.15,
     # cange legend title font size
-    legend_title_font=dict(size=20),
     font=dict(size = 18)# change this value to move the legend lower
 ) )
 
@@ -83,9 +82,19 @@ fig_F.update_layout(
 
 st.title('Campaign Goal Comparison')
 st.write('''
-This is a bar plot displaying the distribution of progress for each campaign goal. The x axis is the best progress achieved, and the y axis is the percent of campaigns that fall into that progress category. The color of the bars represents the progress category. The facet columns represent the campaign goal.
+This page is dedicated to comparing the success and progress made by campaigns for increasing autonomy, compared to
+ campaigns for regime change. The plots use additional criteria to delve into additional factors correlated with the progress made by the campaigns. 
+''')
 
-Please note that all the campaigns that don't have "complete success" as a progress category have ended in failure, but we chose the best status achieved for the campaigns.
+st.subheader('Distribution of Campaign Progress by Campaign Goal')
+st.write('''
+This bar plot, which is faceted by campaign goal, displays the distribution of progress for each campaign goal. 
+The x axis represents the best progress achieved by the campaign,
+ and the y axis represents the percent of campaigns from that goal that fall into this progress
+  category. The color of the bars represents the progress category.
+
+Please note that all the campaigns that don't have "complete success" as a progress category are originally cateorized
+ as ending in failure, we chose to show the best status achieved for the campaigns as an indication of it's achievements.
 ''')
 st.plotly_chart(fig_F)
 
@@ -256,9 +265,9 @@ for goal, df_goal in df_E.groupby('goal_names'):
             source=source,
             target=target,
             value=values,
-            color=colors,  # Add the colors
+            color=colors),
         )
-    )])
+    ])
 
     # Display the plot
 
@@ -267,9 +276,11 @@ for goal, df_goal in df_E.groupby('goal_names'):
                         autosize=True, margin=dict(l=50, r=50, b=100, t=100, pad=4))
     E_figs.append(fig_E)
 
-st.title('Violence and State Reaction Analysis')
+st.subheader('Violence and State Reaction Analysis')
 st.write('''
-This histogram shows the the success rate of campaigns based on the percentage of the population involved in the campaign.
+This multi-faceted pie chart shows the percent of successful campaigns for each level of violence shown by the campaign 
+ participants, and for each level of repression employed by the government. You can view it faceted by goal,
+  or combined for both goals.
 ''')
 if len(figs_CD) == 1:
     st.plotly_chart(figs_CD[0])
@@ -280,10 +291,12 @@ else:
     with col2:
         st.plotly_chart(figs_CD[1])
 
-st.title('International Intervention Analysis')
+st.subheader('International Intervention Analysis')
 st.write('''
 # Explanation of the Plot
-This Sankey plot shows the relationship between international intervention and success in different types of campaigns. The plot is faceted by campaign goal, with each facet representing a different campaign goal. The first split is by international intervention, and each "tube" is further split by progress. The width of each tube represents the number of examples.
+This Sankey plot shows the relationship between international intervention and success in campaigns of different goals.
+ Campaigns of each goal are first split is by international intervention, and then by progress.
+  The width of each tube represents the number of examples of that classification.
 ''')
 col1, col2 = st.columns(2)
 

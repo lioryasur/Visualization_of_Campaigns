@@ -99,9 +99,9 @@ def filter_CD(df: pd.DataFrame):
     df['success'] = df['success'].map(success_values)
     df = df[df["repression_names"] != "unknown"]
 
-    separate = st.checkbox("Facet by Goal")
+    separate = st.checkbox("Combine Goals")
 
-    if not separate:
+    if separate:
         return df, None, separate
 
 
