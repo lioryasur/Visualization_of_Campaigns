@@ -152,3 +152,32 @@ def filter_E(df: pd.DataFrame) -> pd.DataFrame:
             new_df['ab_internat'].append('No Intervention')
 
     return pd.DataFrame(new_df)
+
+
+def filter_F(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Adds a UI on top of a dataframe to let viewers filter columns
+
+    Args:
+        df (pd.DataFrame): Original dataframe
+
+    Returns:
+        pd.DataFrame: Filtered dataframe
+    """
+
+    df = df.copy()
+    progress_values = {0: "status quo", 1: "visible gains short of concessions", 2: "limited concession achieved",
+                       3: "significant concessions achieved", 4: "complete success", -1: "ends in failure",
+                       -99: "unknown"}
+
+
+
+    df = df[df['ab_internat'] != -99]
+    new_df = {'goal_names': [], 'progress_names': []}
+    for id in df['id'].unique():
+        cur_df = df[df['id'] == id]
+        max_progress = cur_df['progress'].max()
+        new_df['progress_names'].append(progress_values[max_progress])
+        new_df['goal_names'].append(cur_df['goal_names'].iloc[0])
+
+    return pd.DataFrame(new_df)

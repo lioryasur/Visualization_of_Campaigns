@@ -6,20 +6,21 @@ from datetime import datetime, time, timedelta
 import time as time_pck
 import os
 import dash_daq as daq
+import plotly
 import plotly.express as px
 import plotly.graph_objects as go
 import numpy as np
 from app import app
 import streamlit as st
 from datetime import time
-from Filters import filter_CD, filter_E
+from Filters import filter_CD, filter_E, filter_F
 import plotly.subplots as sp
 st.set_page_config(layout="wide")
 
 
 
-#os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
-os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+# os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -152,11 +153,9 @@ for goal, df_goal in df_E.groupby('goal_names'):
 
     # Add progress nodes in the correct order
     all_nodes_E = df_goal['ab_internat'].unique().tolist() + df_goal['progress_names'].unique().tolist()
-    #print(all_nodes_E)
 
     # Manually order the labels based on desired_order
     ordered_labels = [label for label in all_nodes_E if label not in progress_order] + [label for label in progress_order if label in all_nodes_E]
-    print(ordered_labels)
     # Create a Sankey plot
     fig_E = go.Figure(data=[go.Sankey(
         node=dict(
@@ -202,7 +201,74 @@ with col1:
 with col2:
     st.plotly_chart(E_figs[1])
 
-# appointment = st.slider(
-#     "Schedule your appointment:",
-#     value=(time(11, 30), time(12, 45)))
-# st.write("You're scheduled for:", appointment)
+
+df_F =  filter_F(df)
+
+
+df_F['progress_names'] = df_F['progress_names'].replace({'ends in failure': 'Failed Immediately'})
+df_F = df_F.groupby(['goal_names', 'progress_names']).size().reset_index(name='counts')
+df_F['percent'] = df_F.groupby(['goal_names'])['counts'].transform(lambda x: x / x.sum() * 100)
+df_F['percent_str'] = df_F['percent'].round(2).astype(str) + '%'
+
+# Create a bar plot faceted by goal and x axis
+fig_F = px.bar(df_F, x="progress_names", y="percent", facet_col="goal_names",
+               color="progress_names",
+               color_discrete_sequence=px.colors.sequential.YlGn,
+               color_discrete_map={"Failed Immediately": "salmon",
+                                   "status quo": "#ffffe5",
+                                   "limited concession achieved": "#d9f0a3",
+                                   "visible gains short of concessions": "#addd8e",
+                                   "significant concessions achieved": "#41ab5d",
+                                   "complete success": "#006837"},
+               category_orders={"progress_names": ["Failed Immediately",
+                                                    "status quo",
+                                                   "limited concession achieved",
+                                                   "visible gains short of concessions",
+                                                   "significant concessions achieved",
+                                                   "complete success"]},
+               labels={"progress_names": "Best Achievement in Campaign"},
+               text="percent_str",
+               facet_col_wrap=2, height=600, width=1100,
+               )
+
+
+#limit y axis to 0-40
+fig_F.update_layout(
+    coloraxis={"colorscale": px.colors.sequential.Darkmint},
+    yaxis=dict(range=[0, 40]),
+    legend=dict(
+    orientation="h",
+    yanchor="bottom",
+
+    y=-0.15  # change this value to move the legend lower
+
+        # xanchor="left",
+) )
+
+
+#remove progress names from x axis but keep the pacet titles
+fig_F.update_xaxes(title_text='')
+fig_F.update_xaxes(showticklabels=False)
+fig_F.update_xaxes(showgrid=False)
+
+
+
+for a in fig_F.layout.annotations:
+    a.text = a.text.split("=")[1]
+    #increase font size
+    a.font.size = 18
+
+fig_F.update_layout(
+
+    yaxis_title='Percent of Total',
+    xaxis={'fixedrange': True},  # Disable dragging on x-axis
+    yaxis={'fixedrange': True, 'range': [0, 45]},    # Use log scale and disable dragging on y-axis,
+)
+
+st.title('Campaign Goal Comparison')
+st.write('''
+This is a bar plot displaying the distribution of progress for each campaign goal. The x axis is the best progress achieved, and the y axis is the percent of campaigns that fall into that progress category. The color of the bars represents the progress category. The facet columns represent the campaign goal.
+
+Please note that all the campaigns that don't have "complete success" as a progress category have ended in failure, but we chose the best status achieved for the campaigns.
+''')
+st.plotly_chart(fig_F)

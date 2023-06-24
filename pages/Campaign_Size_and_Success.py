@@ -10,8 +10,8 @@ st.set_page_config(layout="wide")
 
 
 
-#os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
-os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+# os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -54,7 +54,6 @@ color_dict = {
 
 df_A['color'] = df_A['progress_names'].apply(lambda x: color_dict[x])
 
-print(set(list(df_A['color'])))
 
 # df_A["line_width"]  = df_A["line_width"].apply(lambda x: int(x))
 
@@ -289,6 +288,8 @@ layout = go.Layout(
     xaxis=dict(title='Percent of Population Present In Campaign'),
     yaxis=dict(title='Success Percentage')
 )
+
+
 
 #Create the figure
 fig_B2 = go.Figure(data=[trace], layout=layout)
