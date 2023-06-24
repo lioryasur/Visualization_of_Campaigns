@@ -45,8 +45,8 @@ def filter_B(df: pd.DataFrame, campaign_type):
         df.columns = ['id', 'stat', 'success']
 
     df = df[df['stat'] < 15]
-    df_large = df[df['stat'] > 2]
-    df_small = df[df['stat'] <= 2]
+    df_large = df[df['stat'] > 1.5]
+    df_small = df[df['stat'] <= 1.5]
 
     n_bins = st.selectbox("Number of bins", [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15], index=4)
 

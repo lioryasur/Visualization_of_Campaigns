@@ -19,54 +19,75 @@ st.set_page_config(layout="wide")
 
 
 
-os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
-# os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+#os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
 
 
 # Filter the DataFrame based on the campaign goal
-df_CD = filter_CD(df)  # Replace 'Your Campaign Goal' with your filter
+CD_res = filter_CD(df)  # Replace 'Your Campaign Goal' with your filter
+if CD_res[2]:
+    CD_dfs = [CD_res[0], CD_res[1]]
+else:
+    CD_dfs = [CD_res[0]]
 
 # Create a temporary 'count' column to use for the pie chart values
-df_CD['count'] = 1
 
 # Create a pie chart for each combination of state reaction and violence level
-fig_CD = px.pie(df_CD, values='count', names='success',
-             facet_col='repression_names', facet_row='resistance method',
-             color='success',
-             color_discrete_map={'Success':'#00FF7F', 'Failure':'salmon'},
-            title='Violence and State Reaction Analysis',
-        category_orders={"repression_names": ["extreme repression", "moderate repression", "mild repression", "none"],
-                         "resistance": ["always violent", "never violent", "sometimes violent"]})
+figs_CD = []
+if len(CD_dfs) == 1:
+    titles = ['']
+else:
+    titles = ['Regime Change', 'Greater Autonomy']
+for i, df_CD in enumerate(CD_dfs):
 
 
+    fig_CD = px.pie(df_CD, values='count', names='success',
+                 facet_col='repression_names', facet_row='resistance method',
+                 color='success',
+                 color_discrete_map={'Success':'#00FF7F', 'Failure':'salmon'},
+                title=titles[i],
+            category_orders={"repression_names": ["extreme repression", "moderate repression", "mild repression", "none"],
+                             "resistance method": ["never violent", "sometimes violent", "always violent"]})
 
+    for a in fig_CD.layout.annotations:
+        a.text = a.text.split("=")[1]
 
+    # Customize the layout
+    fig_CD.update_layout(
+        autosize=False,
+        width=750,
+        height=500,
+        title_text=titles[i],
+        title_x=0.5,
+    )
+    if len(CD_dfs) == 2 and i == 0:
+        fig_CD.update_layout(
+            showlegend=False
+        )
 
+    for a in fig_CD['layout']['annotations']:
+        if a['text'] in  ["always violent", "never violent", "sometimes violent"]:
+            a["textangle"] = 50
+            a["xref"] = "paper"
+            a["yref"] = "paper"
+            a["x"] -= 0.04
+            # a["y"] = 1 - (i / 2)
 
-for a in fig_CD.layout.annotations:
-    a.text = a.text.split("=")[1]
+            a['align'] = "left"
+            #incrase font size
+        else:
+            a['y'] = a['y'] + 0.05
+        if a['text'] == 'none':
+            a['text'] = 'No Repression'
 
-# Customize the layout
-fig_CD.update_layout(
-    autosize=False,
-    width=800,
-    height=500,
-    title_text="Violence and State Reaction Analysis",
-)
-
-for i, a in enumerate(fig_CD['layout']['annotations']):
-    if a['text'] in  ["always violent", "never violent", "sometimes violent"]:
-        a["textangle"] = 50
-        a["xref"] = "paper"
-        a["yref"] = "paper"
-        # a["x"] = 0.02
-        # a["y"] = 1 - (i / 2)
-        a['align'] = "left"
-        #incrase font size
-    a['font'] = dict(size=15)
+        a['font'] = dict(size=15)
+        if i == 0 and a['text'] in ["always violent", "never violent", "sometimes violent"]:
+            a['font'] = dict(size=1, color='black')
+        a['text'] = a['text'].title()
+    figs_CD.append(fig_CD)
 
 
 
@@ -85,38 +106,38 @@ df_E['intervention_progress_codes'] = df_E['intervention_progress'].map(interven
 
 # Rest of the code...
 
-progress_order = ['complete success', 'significant concessions achieved', 'limited concession achieved', 'visible gains short of concessions',
-                  'status quo', 'ends in failure']
+
+
+progress_order = ['Complete Success', 'Significant Concessions Achieved', 'Limited Concession Achieved',
+                  'Visible Gains Short Of Concessions', 'Status Quo', 'Ends In Failure']
 # Iterate over each goal
 df_E = filter_E(df)
+df_E['progress_names'] = df_E['progress_names'].str.title()
 # Combine goal, intervention, and progress to create unique nodes
-df_E['goal_intervention'] = df_E['goal_names'] + '_' + df_E['ab_internat']
+#df_E['goal_intervention'] = df_E['goal_names'] + '_' + df_E['ab_internat']
 df_E['intervention_progress'] = df_E['ab_internat'] + '_' + df_E['progress_names']
 
 # Create unique mappings for your categories
-goal_intervention_mapping = {goal_intervention: i for i, goal_intervention in enumerate(df_E['goal_intervention'].unique())}
+#goal_intervention_mapping = {goal_intervention: i for i, goal_intervention in enumerate(df_E['goal_intervention'].unique())}
 intervention_progress_mapping = {intervention_progress: i + len(goal_intervention_mapping) for i, intervention_progress in enumerate(df_E['intervention_progress'].unique())}
 
 # Apply the mappings to your columns
-df_E['goal_intervention_codes'] = df_E['goal_intervention'].map(goal_intervention_mapping)
+#df_E['goal_intervention_codes'] = df_E['goal_intervention'].map(goal_intervention_mapping)
 df_E['intervention_progress_codes'] = df_E['intervention_progress'].map(intervention_progress_mapping)
 
 # Rest of the code...
-
-progress_order = ['complete success', 'significant concessions achieved', 'limited concession achieved', 'visible gains short of concessions',
-                  'status quo', 'ends in failure']
 # Iterate over each goal
 E_figs = []
 color_dict = {
     'No Intervention': '#FFA07A',
     'Material Reprucussions': '#4682B4',
-    'complete success': '#006400',  # Darker green
-    'limited concession achieved': '#A2CD5A',  # Darker yellowgreen
-    'status quo': 'orange',  # Gold
-    'significant concessions achieved': '#6E8B3D',  # Lighter yellowgreen
-    'ends in failure': '#8B0000',  # Dark red
-    'visible gains short of concessions': '#FFD700',  # YellowGreen
-    'greater autonomy': '#808080'  # Gray
+    'Complete Success': '#006400',  # Darker green
+    'Limited Concession Achieved': '#A2CD5A',  # Darker yellowgreen
+    'Status Quo': 'orange',  # Gold
+    'Significant Concessions Achieved': '#6E8B3D',  # Lighter yellowgreen
+    'Ends In Failure': '#8B0000',  # Dark red
+    'Visible Gains Short Of Concessions': '#FFD700',  # YellowGreen
+    'Greater Autonomy': '#808080'  # Gray
 }
 for goal, df_goal in df_E.groupby('goal_names'):
     # Create unique mappings for your categories
@@ -137,12 +158,12 @@ for goal, df_goal in df_E.groupby('goal_names'):
     node_positions = {
         'Material Reprucussions': [0.001, 0.001],
         'No Intervention': [0.001, 0.7],
-        'complete success': [0.999, 0.001],
-        'significant concessions achieved': [0.999, 0.2],
-        'limited concession achieved': [0.999, 0.4],
-        'visible gains short of concessions': [0.999, 0.6],
-        'status quo': [0.999, 0.8],
-        'ends in failure': [.999, .999]
+        'Complete Success': [0.999, 0.001],
+        'Significant Concessions Achieved': [0.999, 0.2],
+        'Limited Concession Achieved': [0.999, 0.4],
+        'Visible Gains Short Of Concessions': [0.999, 0.6],
+        'Status Quo': [0.999, 0.8],
+        'Ends In Failure': [.999, .999]
     }
     # Create the label list with counts included
     label_counts = df_goal['ab_internat'].value_counts().to_dict()
@@ -178,16 +199,22 @@ for goal, df_goal in df_E.groupby('goal_names'):
     # Display the plot
 
     # Set the layout options
-    fig_E.update_layout(title_text=f'{goal}', font_size=10)
+    fig_E.update_layout(title_text=f'{str(goal).title()}', font_size=14, height=500, width=600, title_y=1,
+                        autosize=True, margin=dict(l=50, r=50, b=100, t=100, pad=4))
     E_figs.append(fig_E)
 
-st.title('Campaign Size Distribution')
+st.title('Violence and State Reaction Analysis')
 st.write('''
 This histogram shows the the success rate of campaigns based on the percentage of the population involved in the campaign.
 ''')
-st.plotly_chart(fig_CD)
-
-
+if len(figs_CD) == 1:
+    st.plotly_chart(figs_CD[0])
+else:
+    col1, col2 = st.columns(2)
+    with col1:
+        st.plotly_chart(figs_CD[0])
+    with col2:
+        st.plotly_chart(figs_CD[1])
 
 st.title('International Intervention Analysis')
 st.write('''

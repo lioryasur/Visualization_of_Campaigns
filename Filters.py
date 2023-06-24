@@ -2,7 +2,7 @@
 import pandas as pd
 import streamlit as st
 
-def filter_A(df: pd.DataFrame) -> pd.DataFrame:
+def filter_A(df: pd.DataFrame):
     """
     Adds a UI on top of a dataframe to let viewers filter columns
 
@@ -82,7 +82,7 @@ def filter_A(df: pd.DataFrame) -> pd.DataFrame:
 
 
 
-def filter_CD(df: pd.DataFrame) -> pd.DataFrame:
+def filter_CD(df: pd.DataFrame):
     """
     Adds a UI on top of a dataframe to let viewers filter columns
 
@@ -92,36 +92,26 @@ def filter_CD(df: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: Filtered dataframe
     """
+    df = df.copy()
+    df['count'] = 1
 
     success_values = {0: 'Failure', 1: 'Success'}
     df['success'] = df['success'].map(success_values)
     df = df[df["repression_names"] != "unknown"]
 
-    modify = st.checkbox("CD Filters")
+    separate = st.checkbox("Facet by Goal")
 
-    if not modify:
-        return df
-
-    df = df.copy()
+    if not separate:
+        return df, None, separate
 
 
     modification_container = st.container()
 
-    with modification_container:
-        to_filter_columns = st.multiselect("Filter dataframe on",['Goal'])
-        # ['year', 'campaign_goal']
-        for column in to_filter_columns:
-            left, right = st.columns((1, 20))
-            # Treat columns with < 10 unique values as categorical
-            if column == 'Goal':
-                column = 'goal_names'
-                user_cat_input = right.multiselect(
-                    f"Values for {column}",
-                    df[column].unique(),
-                    default=list(df[column].unique()),
-                )
-                df = df[df[column].isin(user_cat_input)]
-    return df
+    left, right = st.columns((1, 20))
+    # Treat columns with < 10 unique values as categorical
+    df_regime = df[df['goal_names'] == 'regime change']
+    df_auto = df[df['goal_names'] == 'greater autonomy']
+    return df_regime, df_auto, separate
 
 def filter_E(df: pd.DataFrame) -> pd.DataFrame:
     """

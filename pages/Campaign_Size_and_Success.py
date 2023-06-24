@@ -10,8 +10,8 @@ st.set_page_config(layout="wide")
 
 
 
-os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
-# os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
+#os.chdir(r"C:\Users\Freddie\Desktop\personal\Information-Visualization")
+os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -89,9 +89,10 @@ def width_bracket(percent):
     else:
         width = 9
     return width
-
+campaign_names = []
 for i, id in enumerate(ids):
     df_temp = df_A[df_A['id'] == id]
+    campaign_names.append(df_temp['camp_name'].iloc[0])
     unique_years = df_temp['year'].unique()
     ## add another year that is 1 year after the last year and has the same values
     unique_years = np.append(unique_years, unique_years[-1] + 1)
@@ -142,9 +143,13 @@ fig_A.update_layout(
     width=1000,  # Set figure width
     height=790,  # Set figure height
     xaxis_title='Year',
-    yaxis_title='Campaign',
+    yaxis_title='Campaign Name',
     xaxis={'fixedrange': True},  # Disable dragging on x-axis
-    yaxis={'fixedrange': True, 'range': [0, len(ids)], 'showticklabels': False},    # Use log scale and disable dragging on y-axis,
+    yaxis={'fixedrange': True, 'range': [0, len(ids)],
+           'tickvals': list(range(len(ids))),  # Set tick values to the index of each campaign
+           'ticktext': campaign_names, 'showgrid': False  # Set tick labels to the names of the campaigns
+           },    # Use log scale and disable dragging on y-axis,
+
 )
 
 fig_A.update_traces(showlegend=False)
@@ -157,6 +162,7 @@ progress_order = [
     'significant concessions achieved',
     'complete success'
 ]
+progress_order.reverse()
 
 color_trace = px.line(
     df_A,
@@ -194,12 +200,12 @@ from filter_B import filter_B
 
 
 
-df_B1, df_B2, num_bins = filter_B(df, 'Small')
+df_B2, df_B1, num_bins = filter_B(df, 'Small')
 #Define the number of bins and bin width
 bin_width = (df_B1['stat'].max() - df_B1['stat'].min()) / num_bins
 
 #Create the bins
-bins = np.arange(0, df_B1['stat'].max() + bin_width, bin_width)
+bins = np.arange(0, df_B1['stat'].max(), bin_width)
 
 #Group the data into the bins and calculate the average success percentage
 df_B1['stat_bins'] = pd.cut(df_B1['stat'], bins)
@@ -235,7 +241,7 @@ trace = go.Bar(
 
 #Create the layout
 layout = go.Layout(
-    title='Small Campaigns (Up to 2%)',
+    title='Small Campaigns (Up to 1.5%)',
     xaxis=dict(title='Percent of Population Present In Campaign'),
     yaxis=dict(title='Success Percentage')
 )
@@ -248,7 +254,7 @@ fig_B1 = go.Figure(data=[trace], layout=layout)
 bin_width = (df_B2['stat'].max() - df_B2['stat'].min()) / num_bins
 
 #Create the bins
-bins = np.arange(0, df_B2['stat'].max() + bin_width, bin_width)
+bins = np.arange(1.5, df_B2['stat'].max() + bin_width, bin_width)
 
 #Group the data into the bins and calculate the average success percentage
 df_B2['stat_bins'] = pd.cut(df_B2['stat'], bins)
@@ -284,7 +290,7 @@ trace = go.Bar(
 
 #Create the layout
 layout = go.Layout(
-    title='Large Campaigns (Larger than 2%)',
+    title='Large Campaigns (Larger than 1.5%)',
     xaxis=dict(title='Percent of Population Present In Campaign'),
     yaxis=dict(title='Success Percentage')
 )
