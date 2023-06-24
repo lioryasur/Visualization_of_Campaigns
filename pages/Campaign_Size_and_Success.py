@@ -153,7 +153,7 @@ fig_A.update_layout(
            'tickvals': list(range(len(ids))),  # Set tick values to the index of each campaign
            'ticktext': campaign_names, 'showgrid': True  # Set tick labels to the names of the campaigns
            },
-    legend_title_font_size=12,
+    legend_title_font_size=14,
 
     title=dict(text='', x=0.5, xanchor='center', y=0.9),
     autosize=True,
@@ -180,7 +180,7 @@ color_trace = px.line(
     color="progress_names",
     color_discrete_map=color_dict, # Use the color_dict as the color map
     category_orders={"progress_names": progress_order} # Use the progress_order as the category order
-).update_traces(legendgrouptitle_text="Campaign Progress", legendgroup=str("Legends")).update_layout(legend = dict(font=dict(size = 14)))
+).update_traces(legendgrouptitle_text="Campaign Progress", legendgroup=str("Legends")).update_layout(legend_title_font_size=19, legend = dict(font=dict(size = 18)))
 
 
 fig_A.add_traces(color_trace.data)
