@@ -3,11 +3,13 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import os
+from streamlit_extras.switch_page_button import switch_page
 
-st.set_page_config(layout="wide")
+st.set_page_config(layout="wide",initial_sidebar_state="collapsed")
 
+if st.button("Campaign_Size_and_Success"):
+    switch_page("Campaign_Size_and_Success")
 
-os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 from Filters.Filters import filter_CD, filter_E, filter_F
 
 df = pd.read_csv('data/processed_data.csv')
@@ -19,7 +21,7 @@ df_F['progress_names'] = df_F['progress_names'].str.title()
 df_F['goal_names'] = df_F['goal_names'].str.title()
 
 
-df_F['progress_names'] = df_F['progress_names'].replace({'ends in failure': 'Failed Immediately'})
+df_F['progress_names'] = df_F['progress_names'].replace({'Ends In Failure': 'Failed Immediately'})
 df_F = df_F.groupby(['goal_names', 'progress_names']).size().reset_index(name='counts')
 df_F['percent'] = df_F.groupby(['goal_names'])['counts'].transform(lambda x: x / x.sum() * 100)
 df_F['percent_str'] = df_F['percent'].round(2).astype(str) + '%'

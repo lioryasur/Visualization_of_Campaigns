@@ -6,10 +6,15 @@ import plotly.graph_objects as go
 import numpy as np
 import streamlit as st
 import sys
-st.set_page_config(layout="wide")
+from streamlit_extras.switch_page_button import switch_page
 
-os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
-print(os.getcwd())
+# print("Page names: ", st.source_util.get_pages("Campaign_Goal_Analysis.py"))
+st.set_page_config(layout="wide",initial_sidebar_state="collapsed")
+
+if st.button("Campaign Goal Analysis"):
+    switch_page("Campaign_Goal_Analysis")
+
+#os.chdir(r"C:\Users\Lior\Desktop\Information-Visualization")
 
 df = pd.read_csv('data/processed_data.csv')
 df.sort_values(by=['id', 'year'], inplace=True)
@@ -98,7 +103,8 @@ for i, id in enumerate(ids):
 
     new_row = latest_year_row.copy()
     new_row['year'] = new_row['year'] + 1
-    df_temp = df_temp.append(new_row, ignore_index=True)
+    new_row_df = pd.DataFrame(new_row)
+    df_temp = pd.concat([df_temp, new_row_df], ignore_index=True)
 
     for year in unique_years:
         df_years = df_temp[(df_temp['year'] == year) | (df_temp['year'] == year + 1)]
@@ -139,7 +145,7 @@ max_val = df_A['percent_participation'].max()
 fig_A.update_layout(
     autosize=False,  # Disable autosize
     width=1100,  # Set figure width
-    height=790,  # Set figure height
+    height=1080,  # Set figure height
     xaxis_title='Year',
     yaxis_title='Campaign Name',
     xaxis={'fixedrange': True},  # Disable dragging on x-axis
